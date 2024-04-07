@@ -126,7 +126,6 @@ services:
       - broker2
       - broker3
   kafka-connect-sink:
-    #image: cdc/kafka-connect-sink
     image: confluent/kafka-sink-s3
     build:
       context: kafka-connect-sink
@@ -144,7 +143,6 @@ services:
       CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_REST_ADVERTISED_HOST_NAME: "localhost"
-      #CONNECT_PLUGIN_PATH: /usr/share/java
       CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
     links:
       - broker1
