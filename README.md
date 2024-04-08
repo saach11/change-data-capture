@@ -13,7 +13,7 @@ This setup mimics a SQL Server Always On Availability Group, thus Debezium will 
 ![Context Diagram](./images/Architecture.png)
 
 These are the main architectural components:
-* Microsoft SQL Server Availability Group with two nodes: MSSQL Primary and MSSQL Secondary. CDC must be enabled on both, even if Debezium is connected to read prelica.
+replica* Microsoft SQL Server Availability Group with two nodes: MSSQL Primary and MSSQL Secondary. CDC must be enabled on both, even if Debezium is connected to read replica.
 * Kafka Connect with Debezium plugin 
 * Kafka Connect with S3 Sink plugin (Can be a single Kafka Connect image with two source and sink connectors)
 * Apach Kafka Raft - uses Raft consensus protocol for metadata management instead of ZooKeeper.
@@ -31,8 +31,8 @@ These are the main architectural components:
 ### Start containers
 
 Start containers using docker-compose
-```
-docker-compose up -d
+```bash
+docker compose up -d
 ```
 
 ### Configure source - SQL Servers
@@ -57,9 +57,9 @@ curl -X POST -H  "Content-Type:application/json" http://localhost:8083/connector
 ```
 
 ### Configure destination - AWS S3 bucket
-Create a S3 bukcet and an Access Key with privelegeas to read/write into S3 buckets.
+Create a S3 bukcet and an Access Key with priveleges to read/write into S3 buckets.
 
-Create a S3 sink connector in Kafka Connect for Custoemrs table
+Create a S3 sink connector in Kafka Connect for Customers table
 ```bash
 curl -X POST -H  "Content-Type:application/json" http://localhost:8084/connectors/ -d  @kafka-connect-sink/s3-sink-connector-customers.json
 ```
@@ -69,25 +69,25 @@ curl -X POST -H  "Content-Type:application/json" http://localhost:8084/connector
 ```
 
 ### Test the setup
-Trigger CDC by inserting data in CDC enabled table - customers.
+Trigger CDC by inserting data in CDC enabled table - Customers.
 ```bash
 cat sqlserver-init/04-insert-customers-table.sql | docker exec -i mssql-primary bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P $SA_PASSWORD'
 ```
 
-New messages can be noteced in the table topic in Kafka UI
+New messages can be noticed in the table topic in Kafka UI
 ![Context Diagram](./images/Kafka-topic.png)
 
 Notice new objects created in S3 bucket. The path - ```topics/<topic.prefix>.<database.names>.<table.include.list>[*]/partition=0```
 
 ![Context Diagram](./images/S3-bucket.png)
 
-Trigger CDC by updating data in a CDC enabled table - customers, and column that is no in exluded list.
+Trigger CDC by updating data in a CDC enabled table - Customers, and column that is no in exluded list.
 ```bash
 cat sqlserver-init/05-update-customers-table-cdc-trigger.sql | docker exec -i mssql-primary bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P $SA_PASSWORD'
 ```
 Check new messages in the table topic.
 
-Update data in a CDC enabled table - customers, but a column that is in excluded list - last_name. Notice Debezium has not been triggered.
+Update data in a CDC enabled table - Customers, but a column that is in excluded list - last_name. Notice Debezium has not been triggered.
 ```bash
 cat sqlserver-init/06-update-customers-table-no-cdc-trigger.sql | docker exec -i mssql-primary bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P $SA_PASSWORD'
 ```
@@ -96,11 +96,15 @@ No new message ins Kafka topic nor in S3 bucket.
 
 ## Clean up
 
-Any advise for common problems or issues.
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ## License
 
 This project is licensed under the Apache License - see the LICENSE.md file for details.
+
+## Acknowledgments
+
+* [Debezium connector for SQL Server](https://debezium.io/documentation/reference/stable/connectors/sqlserver.html)
+* [Debezium Examples](https://github.com/debezium/debezium-examples)
